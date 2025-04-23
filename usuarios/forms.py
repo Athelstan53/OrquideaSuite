@@ -27,30 +27,20 @@ class CustomUserCreationForm(forms.ModelForm):
         return user
 
 class BuscarHabitacionForm(forms.Form):
-    check_in = forms.DateField(
-        widget=forms.DateInput(attrs={'type': 'date', 'min': timezone.now().date().isoformat()}),
-        label="Fecha de entrada"
+    numero = forms.IntegerField(required=False, label="Número de habitación")
+    tipo = forms.CharField(required=False, label="Tipo de habitación")
+    capacidad = forms.IntegerField(required=False, label="Capacidad mínima")
+    precio_por_noche = forms.DecimalField(
+        required=False,
+        label="Precio máximo por noche",
+        max_digits=8,
+        decimal_places=2
     )
-    check_out = forms.DateField(
-        widget=forms.DateInput(attrs={'type': 'date'}),
-        label="Fecha de salida"
+    disponibilidad = forms.ChoiceField(
+        required=False,
+        choices=[('', '---------'), ('True', 'Disponible'), ('False', 'No disponible')],
+        label="Disponibilidad"
     )
-    guests = forms.IntegerField(min_value=1, label="Cantidad de huéspedes")
-
-    def clean_check_in(self):
-        check_in = self.cleaned_data.get('check_in')
-        if check_in < timezone.now().date():
-            raise forms.ValidationError("La fecha de entrada no puede ser en el pasado.")
-        return check_in
-
-    def clean(self):
-        cleaned_data = super().clean()
-        check_in = cleaned_data.get("check_in")
-        check_out = cleaned_data.get("check_out")
-        
-        if check_in and check_out and check_out <= check_in:
-            raise forms.ValidationError("La fecha de salida debe ser posterior a la fecha de entrada.")
-
 
 class HabitacionForm(forms.ModelForm):
     class Meta:

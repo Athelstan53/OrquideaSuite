@@ -6,3 +6,4 @@ class ServicioLavanderiaAdmin(admin.ModelAdmin):
     list_display = ('id', 'usuario', 'fecha_solicitud', 'estado', 'precio_servicio')
     list_filter = ('estado', 'fecha_solicitud')  # Filtros para facilitar la búsqueda
     search_fields = ('usuario__nombre', 'descripcion')  # Búsqueda por usuario o descripción
+

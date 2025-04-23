@@ -62,19 +62,26 @@ def buscar_habitaciones(request):
     habitaciones_disponibles = None
 
     if request.method == 'POST' and form.is_valid():
-        check_in = form.cleaned_data['check_in']
-        check_out = form.cleaned_data['check_out']
-        guests = form.cleaned_data['guests']
+        habitaciones = Habitacion.objects.all()
+        numero = form.cleaned_data.get('numero')
+        tipo = form.cleaned_data.get('tipo')
+        capacidad = form.cleaned_data.get('capacidad')
+        precio_max = form.cleaned_data.get('precio_por_noche')
+        disponibilidad = form.cleaned_data.get('disponibilidad')
 
-        if check_in < timezone.now().date():
-            form.add_error('check_in', "La fecha de entrada no puede ser en el pasado.")
-        elif check_out <= check_in:
-            form.add_error('check_out', "La fecha de salida debe ser posterior a la de entrada.")
-        else:
-            habitaciones_disponibles = Habitacion.objects.filter(
-                disponible=True,
-                capacidad__gte=guests
-            )
+        if numero is not None:
+            habitaciones = habitaciones.filter(numero=numero)
+        if tipo:
+            habitaciones = habitaciones.filter(tipo__icontains=tipo)
+        if capacidad is not None:
+            habitaciones = habitaciones.filter(capacidad__gte=capacidad)
+        if precio_max is not None:
+            habitaciones = habitaciones.filter(precio_por_noche__lte=precio_max)
+        if disponibilidad in ['True', 'False']:
+            is_disp = disponibilidad == 'True'
+            habitaciones = habitaciones.filter(disponible=is_disp)
+
+        habitaciones_disponibles = habitaciones
 
     return render(request, 'usuarios/buscar_habitaciones.html', {
         'form': form,
@@ -112,26 +119,20 @@ def actualizar_habitacion(request, id):
 
 
 # Vista para eliminar una habitación
+@login_required
 def eliminar_habitacion(request, id):
-    habitacion = get_object_or_404(Habitacion, id=id)
-
-    # Eliminar los servicios de lavandería asociados
-    try:
-        ServicioLavanderia.objects.filter(habitacion=habitacion).delete()
-    except IntegrityError as e:
-        print(f"Error al eliminar los servicios de lavandería: {e}")
-
-    # Eliminar la habitación
-    habitacion.delete()
+    # usar manager all_objects para encontrar incluso inactivos
+    habitacion = get_object_or_404(Habitacion.all_objects, id=id)
+    habitacion.delete()  # soft delete y log
+    messages.success(request, "Habitación deshabilitada correctamente.")
     return redirect('visualizar_habitaciones')
 
 
 # Vista para visualizar todas las habitaciones
 @login_required
 def visualizar_habitaciones(request):
-    habitaciones = Habitacion.objects.all()
+    habitaciones = Habitacion.objects.all()  # solo activas
     return render(request, 'usuarios/visualizar_habitaciones.html', {'habitaciones': habitaciones})
-
 
 # Vista para reservar una habitación
 @login_required

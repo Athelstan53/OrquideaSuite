@@ -7,11 +7,6 @@
     <link rel="stylesheet" type="text/css" href="/static/style.css">
 </head>
 <body>
-    <!-- <header>
-        <img src="../images/orchid-logo.png" alt="OrquideaSuite Logo">
-        <h1>OrquideaSuite - Buscar Habitaciones</h1>
-    </header>-->
-
     <header class="top-bar">
         <div class="logo">
             <img src="../images/orchid-logo.png" alt="OrquideaSuite Logo">
@@ -19,33 +14,51 @@
         <h1>OrquideaSuite - Buscar Habitaciones</h1>
     </header>
 
-    <!-- Incluye aquí el archivo de mensajes -->
     {% include 'usuarios/messages.html' %}
 
     <a href="{% url 'dashboard' %}" class="btn-menu">Volver al Menú</a>
 
     <div class="container">
-        <h2>Buscar Habitaciones Disponibles</h2>
+        <h2>Buscar Habitaciones</h2>
         <form method="POST">
             {% csrf_token %}
-            {{ form.as_p }}
+            <p>
+                <label for="{{ form.numero.id_for_label }}">{{ form.numero.label }}:</label>
+                {{ form.numero }}
+            </p>
+            <p>
+                <label for="{{ form.tipo.id_for_label }}">{{ form.tipo.label }}:</label>
+                {{ form.tipo }}
+            </p>
+            <p>
+                <label for="{{ form.capacidad.id_for_label }}">{{ form.capacidad.label }}:</label>
+                {{ form.capacidad }}
+            </p>
+            <p>
+                <label for="{{ form.precio_por_noche.id_for_label }}">{{ form.precio_por_noche.label }}:</label>
+                {{ form.precio_por_noche }}
+            </p>
+            <p>
+                <label for="{{ form.disponibilidad.id_for_label }}">{{ form.disponibilidad.label }}:</label>
+                {{ form.disponibilidad }}
+            </p>
             <button type="submit" class="btn">Buscar</button>
         </form>
 
         {% if habitaciones_disponibles %}
-            <h3>Habitaciones Disponibles</h3>
+            <h3>Resultados</h3>
             <ul>
-                {% for habitacion in habitaciones_disponibles %}
-                    <li>{{ habitacion.tipo }} - {{ habitacion.numero }} - Capacidad: {{ habitacion.capacidad }} - Precio por noche: {{ habitacion.precio_por_noche }}</li>
+                {% for h in habitaciones_disponibles %}
+                    <li>
+                        #{{ h.numero }} — {{ h.tipo }} — Capacidad: {{ h.capacidad }} — 
+                        ${{ h.precio_por_noche }} — 
+                        {% if h.disponible %}Disponible{% else %}No disponible{% endif %}
+                    </li>
                 {% endfor %}
             </ul>
-        {% else %}
-            {% if form.is_bound %}
-                <p>No se encontraron habitaciones disponibles para los criterios seleccionados.</p>
-            {% endif %}
+        {% elif form.is_bound %}
+            <p>No se encontraron habitaciones con esos criterios.</p>
         {% endif %}
     </div>
 </body>
 </html>
-
-
