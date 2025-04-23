@@ -15,56 +15,47 @@
         </div>
     </header>
 
+    <style>
+        .form-wrapper {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px; /* Espacio entre el recuadro y los botones */
+        }
+
+        .button-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px; /* Espacio entre los botones */
+        }
+    </style>
+
+<h2 style="text-align: center;">Reserva tu Habitación</h2>
     <div class="form-container">
-        <h2>Reserva tu Habitación</h2>
-        <form method="POST">
-            {% csrf_token %}
-            
-            <div class="form-group">
-                <label for="habitacion">Número de Habitación:</label>
-                <select name="habitacion" id="habitacion" required>
-                    {% for habitacion in habitaciones_disponibles %}
-                        <option value="{{ habitacion.id }}">
-                            {{ habitacion.numero }} - {{ habitacion.tipo }} 
-                            {% if habitacion.disponible %}
-                                (Disponible)
-                            {% else %}
-                                (Ocupada)
-                            {% endif %}
-                        </option>
-                    {% empty %}
-                        <option>No hay habitaciones disponibles</option>
-                    {% endfor %}
-                </select>
-            </div>
 
-            <div class="form-group">
-                <label for="fecha_check_in">Fecha de Check-In:</label>
-                <input type="date" name="fecha_check_in" id="fecha_check_in" required>
-            </div>
-
-            <div class="form-group">
-                <label for="fecha_check_out">Fecha de Check-Out:</label>
-                <input type="date" name="fecha_check_out" id="fecha_check_out" required>
-            </div>
-
-            <button type="submit" class="btn-primary">Reservar</button>
-        </form>
-
-        {% if reserva_exitosa %}
-            <div class="alert success">
-                <p>¡Reserva realizada con éxito! La habitación {{ reserva_exitosa.numero }} está ahora reservada.</p>
-            </div>
-        {% elif error %}
-            <div class="alert error">
-                <p>{{ error }}</p>
-            </div>
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert {% if message.tags %}{{ message.tags }}{% endif %}">
+                    <p>{{ message }}</p>
+                </div>
+            {% endfor %}
         {% endif %}
-        
-        <!-- Botón para redirigir al dashboard -->
-        <div class="redirect-button">
-            <a href="{% url 'dashboard' %}" class="btn-secondary">Ir al Dashboard</a>
+
+        <div class="form-wrapper">
+            <form method="POST">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit" class="btn-primary">Reservar</button>
+                <div class="button-container">
+                    <a href="{% url 'dashboard' %}" class="btn-secondary">Ir al Dashboard</a>
+                </div>
+            </form>
         </div>
+
+
     </div>
 </body>
 </html>
+

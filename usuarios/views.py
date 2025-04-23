@@ -13,6 +13,7 @@ from .models import Habitacion, ServicioLavanderia, Reserva, Cliente
 from .forms import ReservaForm
 from django.db import IntegrityError
 from .forms import ReservaForm
+
 # Vista para el dashboard (requiere que el usuario esté autenticado)
 @login_required(login_url='iniciar_sesion')
 def dashboard(request):
@@ -134,52 +135,32 @@ def visualizar_habitaciones(request):
     habitaciones = Habitacion.objects.all()  # solo activas
     return render(request, 'usuarios/visualizar_habitaciones.html', {'habitaciones': habitaciones})
 
+
 # Vista para reservar una habitación
 @login_required
 def reservar_habitacion(request):
-     if request.method == 'POST':
-        habitacion_id = request.POST.get('habitacion')
-        fecha_inicio = request.POST.get('fecha_check_in')
-        fecha_fin = request.POST.get('fecha_check_out')
+    if request.method == 'POST':
+        form = ReservaForm(request.POST)
+        if form.is_valid():
+            reserva = form.save(commit=False)
+            habitacion = reserva.habitacion
 
-        try:
-            # Validar que la habitación exista
-            habitacion = Habitacion.objects.get(id=habitacion_id)
-
-            # Verificar si la habitación está disponible
             if habitacion.disponible:
-                habitacion.disponible = False  # Cambiar el estado de la habitación
+                habitacion.disponible = False
                 habitacion.save()
 
-                # Obtener o crear el cliente asociado al usuario
-                cliente, created = Cliente.objects.get_or_create(usuario=request.user)
+                reserva.cliente, _ = Cliente.objects.get_or_create(usuario=request.user)
+                reserva.estado_reserva = 'reservada'
+                reserva.save()
 
-                # Crear la reserva
-                reserva = Reserva.objects.create(
-                    fecha_inicio=fecha_inicio,
-                    fecha_fin=fecha_fin,
-                    estado_reserva='reservada',
-                    habitacion=habitacion,
-                    cliente=cliente
-                )
-
-                # Notificar éxito
                 messages.success(request, f'¡Reserva realizada con éxito! La habitación {habitacion.numero} está ahora reservada.')
+                return redirect('dashboard')
             else:
                 messages.error(request, 'La habitación seleccionada no está disponible.')
+    else:
+        form = ReservaForm()
 
-        except Habitacion.DoesNotExist:
-            messages.error(request, 'La habitación seleccionada no existe o no es válida.')
-        except Exception as e:
-            # Manejar otros errores inesperados
-            messages.error(request, f'Ocurrió un error al realizar la reserva: {str(e)}')
-
-        # Redirigir siempre al dashboard después del intento de reserva
-        return redirect('dashboard')
-
-    # Obtener habitaciones disponibles para la plantilla
-     habitaciones_disponibles = Habitacion.objects.filter(disponible=True)
-     return render(request, 'usuarios/reservar_habitacion.html', {'habitaciones_disponibles': habitaciones_disponibles})
+    return render(request, 'usuarios/reservar_habitacion.html', {'form': form})
 
 
 # Vista para solicitar un servicio (lavandería)
